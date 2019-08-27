@@ -1,16 +1,7 @@
 import random
 
 
-class Col(object):
-    def __init__(self, n, mu, m2, lo, hi):
-        self.n = n;
-        self.mu = mu
-        self.m2 = m2
-        self.lo = lo
-        self.hi = hi
-
-
-class Num(Col):
+class Num():
     "Track numbers seen in a column"
 
     def __init__(self, inits=[]):
@@ -48,18 +39,6 @@ class Num(Col):
             self.m2 -= d * (x - self.mu)
 
 
-# class Sym(Col):
-#     def __init__(self):
-#         super().__init__()
-#     # TODO
-#
-#
-# class Some(Col):
-#     def __init__(self):
-#         super().__init__()
-#     # TODO
-
-
 def main():
     print("Generate list with 100 random numbers between 1 and 200")
     test_randoms = random.sample(range(200), 100)
@@ -71,13 +50,11 @@ def main():
     sdAddList = []
     index = 1
     for randomNum in test_randoms:
-        numAddInstance.__add__(randomNum)
+        numAddInstance + randomNum
         if index % 10 == 0:
             meanAddList.append(round(numAddInstance.expect(), 2)), sdAddList.append(round(numAddInstance.delta(), 2))
         index += 1
 
-    print("mean Add list: ", meanAddList)
-    print("sd Add List: ", sdAddList)
 
     numSubInstance = Num(test_randoms)
     meanSubList = []
@@ -86,10 +63,14 @@ def main():
     for randomNum in reversed(test_randoms):
         if index % 10 == 0:
             meanSubList.append(round(numSubInstance.expect(), 2)), sdSubList.append(round(numSubInstance.delta(), 2))
-        numSubInstance.__sub__(randomNum)
+        numSubInstance - randomNum
         index -= 1
 
+    meanSubList.reverse()
+    sdSubList.reverse()
+    print("mean Add list: ", meanAddList)
     print("mean sub List: ", meanSubList)
+    print("sd Add List: ", sdAddList)
     print("sd sub List: ", sdSubList)
 
 

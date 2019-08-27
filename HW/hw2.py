@@ -1,59 +1,88 @@
-import re
+import re, sys, zipfile
+from Num import Num
 
 
-# class Tbl:
-#
-# class Col:
-#
-# class Row:
-#
-#
+class THE:
+    sep = ","
+    num = "$"
+    less = "<"
+    more = ">"
+    skip = "?"
+    doomed = r'([\n\t\r ]|#.*)'
 
-def compiler(x):
-    "return something that can compile strings of type x"
-    try:
-        int(x);
-        return int
-    except:
-        try:
-            float(x);
-            return float
-        except ValueError:
-            return str
+
+class Tbl:
+    def __init__(self):
+        pass
+
+    def read(self, file):
+        for lst in cells(cols(rows(string(file)))):
+            print(lst)
+
+    def dump(self):
+        pass
 
 
 def string(s):
-    "read lines from a string"
+    """read lines from a string"""
     for line in s.splitlines():
         yield line
 
 
-def rows(src,
-         sep=",",
-         doomed=r'([\n\t\r ]|#.*)'):
-    "convert lines into lists, killing whitespace and comments"
-    for line in src:
-        line = line.strip()
-        line = re.sub(doomed, '', line)  # re.sub(pattern, repl, string, count=0, flags=0)
+def rows(src):
+    """convert lines into lists, killing whitespace
+    and comments. skip over lines of the wrong size"""
+    linesize = None
+    for n, line in enumerate(src):
+        line = re.sub(THE.doomed, '', line.strip())
         if line:
-            yield line.split(sep)
+            line = line.split(THE.sep)  # breakup a string and add the data to a string array
+            if linesize is None:
+                linesize = len(line)
+            if len(line) == linesize:
+                yield line
+            else:
+                print("E> skipping line %s" % n, file=sys.stderr)  # To print to STDERR
+
+
+def cols(src):
+    """skip columns whose name contains '?'"""
+    usedCol = None
+    for cells in src:
+        # usedCol = usedCol or [n for n, cell in enumerate(cells) if not THE.skip in cell]
+        if usedCol is None:
+            usedCol = [n for n, cell in enumerate(cells) if not THE.skip in cell]
+        yield [cells[n] for n in usedCol]
 
 
 def cells(src):
-    "convert strings into their right types"
-    oks = None
-    for n, cells in enumerate(src):
-        if n == 0:
-            yield cells
-        else:
-            oks = oks or [compiler(cell) for cell in cells]
-            yield [f(cell) for f, cell in zip(oks, cells)]
+    """convert strings into their right types"""
+    one = next(src)
+    fs = [None] * len(one) # [None, None, None, None]
+    yield one  # the first line
+
+    def ready(n, cell):
+        if cell == THE.skip:
+            return cell  # skip over '?'
+        fs[n] = fs[n] or prep(one[n])  # ensure column 'n' compiles
+        return fs[n](cell)  # compile column 'n'
+
+    for _, cells in enumerate(src):
+        # print("cells:", cells)
+        yield [ready(n, cell) for n, cell in enumerate(cells)]
 
 
-def fromString(s):
-    "putting it all together"
-    for lst in cells(rows(string(s))):
-        yield lst
+def prep(x):
+    """return something that can compile strings"""
+    def num(z):
+        f = float(z)
+        i = int(f)
+        return i if i == f else f
+
+    # --------------------------------------------------------
+    for c in [THE.num, THE.less, THE.more]:
+        if c in x:
+            return num
 
 
 def main():
@@ -75,8 +104,9 @@ def main():
     40,         81,    75,    0,    2
     100,        71,    91,    15,   0
     """
-    for lst in rows(string(s)):
-        print(lst)
+
+    tbl = Tbl()
+    tbl.read(s)
 
 
 if __name__ == "__main__":

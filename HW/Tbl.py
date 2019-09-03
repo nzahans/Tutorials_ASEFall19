@@ -12,50 +12,90 @@ class THE:
 
 
 class Tbl:
-    def __init__(self, oid):
+
+    listOfRead = []
+    listOfRow = []
+    listOfCol = []
+
+    def __init__(self, oid = 0):
         self.oid = oid
 
     def read(self, file):
-        list = []
-        for lst in cells(cols(rows(string(file)))):
-            print(lst)
-            list.append(lst)
-        return list
 
-    def dump(self, list=[]):
-        print(list)
-        print("")
-        print("t.cols")
+        # list = []
+        # for lst in cells(cols(rows(string(file)))):
+        #     print(lst)
+        #     list.append(lst)
 
-        for i, head in enumerate(list[0], start=1):
-            print("| ", i)
-            print("| | add:", "Num1")
-            print("| | col:", i)
-            print("| | hi:", )
-            print("| | lo:", )
-            print("| | m2:", )
-            print("| | mu:", )
-            print("| | n:", )
-            print("| | oid:", )
-            print("| | sd:", )
-            print("| | txt:", head)
+        # for i in string(file):
+        #     print("string:", i)
+        #
+        # for i in rows(string(file)):
+        #     print("rows:", i)
+        #
+        # for i in cols(rows(string(file))):
+        #     print("cols:", i)
 
-        print("t.oid:", )
-        print("t.rows:" )
-        for i, element in enumerate(list[1:], start=1):
-            print("| ", i)
-            print("| | cells")
-            for j in range(len(list[0])):
-                print("| | | ", j + 1, ":", list[i][j])
-            print("| | ", "cooked")
-            print("| | dom:", 0)
-            print("| | oid:", )
+        firstRow = []
+        for cell in cells(cols(rows(string(file)))):
+            self.listOfRead.append(cell) # store all processed output
+            print("cells:", cell, type(cell))
+
+            if firstRow == []: # check init title list is empty
+                firstRow = cell
+                print("text:", firstRow, type(firstRow))
+                for i, t in enumerate(firstRow):
+                    col = Col(0, i, t)
+                    self.listOfCol.append(col)
+            else:
+                row = Row(0, cell, [], 0)
+                self.listOfRow.append(row)  # each row is a Row object
+                # print("cell0", cell[0])
+
+        # return self.listOfRead, self.listOfRow, self.listOfCol
+
+    def dump(self):
+
+        for i in self.listOfRow:
+            print("each row object:", i.cells)
+
+        for j in self.listOfCol:
+            print("col pos and text", j.pos, j.txt)
+
+        print("listOfRead:", self.listOfRead)
+
+        # print("")
+        # print("t.cols")
+        #
+        # for i, head in enumerate(list[0], start=1):
+        #     print("| ", i)
+        #     print("| | add:", "Num1")
+        #     print("| | col:", i)
+        #     print("| | hi:", )
+        #     print("| | lo:", )
+        #     print("| | m2:", )
+        #     print("| | mu:", )
+        #     print("| | n:", )
+        #     print("| | oid:", )
+        #     print("| | sd:", )
+        #     print("| | txt:", head)
+        #
+        # print("t.oid:", self.oid)
+        # print("t.rows:", )
+        # for i, element in enumerate(list[1:], start=1):
+        #     print("| ", i)
+        #     print("| | cells")
+        #     for j in range(len(list[0])):
+        #         print("| | | ", j + 1, ":", list[i][j])
+        #     print("| | ", "cooked")
+        #     print("| | dom:", 0)
+        #     print("| | oid:", self.oid)
 
 
 class Col:
-    def __init__(self, oid, col, txt):
+    def __init__(self, oid = 0, pos = 0, txt = None):
         self.oid = oid
-        self.col = col
+        self.pos = pos
         self.txt = txt
 
 
@@ -150,9 +190,9 @@ def main():
     100,        71,    91,    15,   0
     """
 
-    tbl = Tbl(1)
-    list = tbl.read(s)
-    tbl.dump(list)
+    tbl = Tbl()
+    tbl.read(s)
+    tbl.dump()
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-import re, sys, zipfile
+import re, sys
 from Num import Num
 
 
@@ -12,38 +12,28 @@ class THE:
 
 
 class Tbl:
+    global globalOid
+    listOfRead = []  # processed output from read
+    listOfRow = []  # list of row objects
+    listOfCol = []  # list of col object
 
-    listOfRead = []
-    listOfRow = []
-    listOfCol = []
+    def __init__(self):
+        self.globalOid = 1  # oid implementation need improvement
 
-    def __init__(self, oid = 0):
-        self.oid = oid
+    def incrOid(self):
+        self.globalOid += 1
+        return self.globalOid;
 
     def read(self, file):
-
-        # list = []
-        # for lst in cells(cols(rows(string(file)))):
-        #     print(lst)
-        #     list.append(lst)
-
-        # for i in string(file):
-        #     print("string:", i)
-        #
-        # for i in rows(string(file)):
-        #     print("rows:", i)
-        #
-        # for i in cols(rows(string(file))):
-        #     print("cols:", i)
-
         firstRow = []
         for cell in cells(cols(rows(string(file)))):
-            self.listOfRead.append(cell) # store all processed output
-            print("cells:", cell, type(cell))
+            print(cell)
+            self.listOfRead.append(cell)  # store all processed output
+            # print("cells:", cell, type(cell))
 
-            if firstRow == []: # check init title list is empty
+            if firstRow == []:  # check init title list is empty
                 firstRow = cell
-                print("text:", firstRow, type(firstRow))
+                # print("text:", firstRow, type(firstRow))
                 for i, t in enumerate(firstRow):
                     col = Col(0, i, t)
                     self.listOfCol.append(col)
@@ -52,55 +42,72 @@ class Tbl:
                 self.listOfRow.append(row)  # each row is a Row object
                 # print("cell0", cell[0])
 
-        # return self.listOfRead, self.listOfRow, self.listOfCol
-
     def dump(self):
 
-        for i in self.listOfRow:
-            print("each row object:", i.cells)
+        # print("listOfRead:", self.listOfRead)
 
-        for j in self.listOfCol:
-            print("col pos and text", j.pos, j.txt)
+        # for i in self.listOfRow:
+        #     print("each row object:", i.cells)
 
-        print("listOfRead:", self.listOfRead)
+        numInstance = [None] * len(self.listOfCol)
+        # print(numInstance)
+        for i in range(len(self.listOfCol)):
+            # print(i)
+            numInstance[i] = Num()
+        # print(numInstance)
 
-        # print("")
-        # print("t.cols")
-        #
-        # for i, head in enumerate(list[0], start=1):
-        #     print("| ", i)
-        #     print("| | add:", "Num1")
-        #     print("| | col:", i)
-        #     print("| | hi:", )
-        #     print("| | lo:", )
-        #     print("| | m2:", )
-        #     print("| | mu:", )
-        #     print("| | n:", )
-        #     print("| | oid:", )
-        #     print("| | sd:", )
-        #     print("| | txt:", head)
-        #
-        # print("t.oid:", self.oid)
-        # print("t.rows:", )
-        # for i, element in enumerate(list[1:], start=1):
-        #     print("| ", i)
-        #     print("| | cells")
-        #     for j in range(len(list[0])):
-        #         print("| | | ", j + 1, ":", list[i][j])
-        #     print("| | ", "cooked")
-        #     print("| | dom:", 0)
-        #     print("| | oid:", self.oid)
+        for _, item in enumerate(self.listOfRead[1:len(self.listOfRead)]):
+            # print("item:", item, type(item))
+            for j in self.listOfCol:
+                # print("pos:", j.pos, "num:", item[j.pos])
+                if (item[j.pos] == THE.skip):
+                    numInstance[j.pos].__add__(0)  # use 0 for ? in hw2
+                else:
+                    numInstance[j.pos].__add__(item[j.pos])
+
+        # print(numInstance)
+
+        # for i in range(len(self.listOfCol)):
+        #     print(numInstance[i].expect())
+
+        print("")
+        print("t.cols")
+
+        for i in range(len(self.listOfCol)):
+            print("| ", i + 1)
+            print("| | add:", "Num1")
+            print("| | col:", i + 1)
+            print("| | hi:", numInstance[i].hi)
+            print("| | lo:", numInstance[i].lo)
+            print("| | m2:", "{:.3f}".format(numInstance[i].m2))
+            print("| | mu:", "{:.3f}".format(numInstance[i].expect()))
+            print("| | n:", len(self.listOfRead))
+            print("| | oid:", self.incrOid())
+            print("| | sd:", "{:.3f}".format(numInstance[i].delta()))
+            print("| | txt:", self.listOfCol[i].txt)
+
+        print("t.oid:", self.globalOid)
+
+        print("t.rows:", )
+        for i, element in enumerate(self.listOfRow):
+            print("| ", i + 1)
+            print("| | cells")
+            for j in range(len(element.cells)):
+                print("| | | ", j + 1, ":", element.cells[j])
+            print("| | ", "cooked")  # Need further implementation
+            print("| | dom:", 0)
+            print("| | oid:", self.incrOid())
 
 
 class Col:
-    def __init__(self, oid = 0, pos = 0, txt = None):
+    def __init__(self, oid=0, pos=0, txt=None):
         self.oid = oid
         self.pos = pos
         self.txt = txt
 
 
 class Row:
-    def __init__(self, oid, cells = [], cooked = [], dom = 0):
+    def __init__(self, oid, cells=[], cooked=[], dom=0):
         self.oid = oid
         self.cells = cells
         self.cooked = cooked
@@ -171,7 +178,7 @@ def prep(x):
 
 
 def main():
-    s = """
+    file = """
     $cloudCover, $temp, ?$humid, <wind,  $playHours
     100,        68,    80,    0,    3   # comments
     0,          85,    85,    0,    0
@@ -191,7 +198,7 @@ def main():
     """
 
     tbl = Tbl()
-    tbl.read(s)
+    tbl.read(file)
     tbl.dump()
 
 

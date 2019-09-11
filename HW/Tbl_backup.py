@@ -11,96 +11,104 @@ class THE:
     doomed = r'([\n\t\r ]|#.*)'
 
 
-class Mine:
-    oid = 0
-
-    def identify(self):
-        Mine.oid += 1
-        self.oid = Mine.oid
-        return self.oid
-
-    def __repr__(i):
-        pairs = sorted([(k, v) for k, v in i.__dict__.items()
-                        if k[0] != "_"])
-        pre = i.__class__.__name__ + '{'
-        q = lambda z: "'%s'" % z if isinstance(z, str) else str(z)
-        return pre + ", ".join(['%s=%s' % (k, q(v))
-                                for k, v in pairs]) + '}'
-
-
-class Tbl(Mine):
+class Tbl:
+    global globalOid
     listOfRead = []  # processed output from read
     listOfRow = []  # list of row objects
     listOfCol = []  # list of col object
 
     def __init__(self):
-        self.identify()  # oid implementation need improvement
+        self.globalOid = 1  # oid implementation need improvement
+
+    def incrOid(self):
+        self.globalOid += 1
+        return self.globalOid;
 
     def read(self, file):
-        for n, cell in enumerate(cells(cols(rows(string(file))))):
+        firstRow = []
+        for cell in cells(cols(rows(string(file)))):
             print(cell)
             self.listOfRead.append(cell)  # store all processed output
-            if n == 0:  # check init title list is empty
-                self.listOfCol = [Col(i, t) for i, t in enumerate(cell)]
+            # print("cells:", cell, type(cell))
+
+            if firstRow == []:  # check init title list is empty
+                firstRow = cell
+                # print("text:", firstRow, type(firstRow))
+                for i, t in enumerate(firstRow):
+                    col = Col(0, i, t)
+                    self.listOfCol.append(col)
             else:
-                self.listOfRow += [Row(cell, [], 0)]  # each row is a Row object
+                row = Row(0, cell, [], 0)
+                self.listOfRow.append(row)  # each row is a Row object
+                # print("cell0", cell[0])
 
     def dump(self):
-        # [print(a) for a in self.listOfRead]
-        # [print(c) for c in self.listOfCol]
-        # [print(r) for r in self.listOfRow]
+
+        # print("listOfRead:", self.listOfRead)
+
+        # for i in self.listOfRow:
+        #     print("each row object:", i.cells)
+
+        numInstance = [None] * len(self.listOfCol)
+        # print(numInstance)
+        for i in range(len(self.listOfCol)):
+            # print(i)
+            numInstance[i] = Num()
+        # print(numInstance)
+
+        for _, item in enumerate(self.listOfRead[1:len(self.listOfRead)]):
+            # print("item:", item, type(item))
+            for j in self.listOfCol:
+                # print("pos:", j.pos, "num:", item[j.pos])
+                if (item[j.pos] == THE.skip):
+                    numInstance[j.pos].__add__(0)  # use 0 for ? in hw2
+                else:
+                    numInstance[j.pos].__add__(item[j.pos])
+
+        # print(numInstance)
+
+        # for i in range(len(self.listOfCol)):
+        #     print(numInstance[i].expect())
 
         print("")
         print("t.cols")
 
-        for i, element in enumerate(self.listOfCol):
-
-            numInstance = Num()
-
-            for _, item in enumerate(self.listOfRead[1:len(self.listOfRead)]):
-                # print(item[element.pos])
-                if item[element.pos] == THE.skip:
-                    numInstance.__add__(0)  # use 0 for ? in hw2
-                else:
-                    numInstance.__add__(item[element.pos])
-
+        for i in range(len(self.listOfCol)):
             print("| ", i + 1)
             print("| | add:", "Num1")
             print("| | col:", i + 1)
-            print("| | hi:", numInstance.hi)
-            print("| | lo:", numInstance.lo)
-            print("| | m2:", "{:.3f}".format(numInstance.m2))
-            print("| | mu:", "{:.3f}".format(numInstance.expect()))
+            print("| | hi:", numInstance[i].hi)
+            print("| | lo:", numInstance[i].lo)
+            print("| | m2:", "{:.3f}".format(numInstance[i].m2))
+            print("| | mu:", "{:.3f}".format(numInstance[i].expect()))
             print("| | n:", len(self.listOfRead))
-            print("| | oid:", element.oid)
-            print("| | sd:", "{:.3f}".format(numInstance.delta()))
-            print("| | txt:", element.txt)
+            print("| | oid:", self.incrOid())
+            print("| | sd:", "{:.3f}".format(numInstance[i].delta()))
+            print("| | txt:", self.listOfCol[i].txt)
 
-        print("t.oid:", self.oid)
+        print("t.oid:", self.globalOid)
 
         print("t.rows:", )
         for i, element in enumerate(self.listOfRow):
-            row = element.cells
-
             print("| ", i + 1)
             print("| | cells")
-            for j in range(len(row)):
-                print("| | | ", j + 1, ":", row[j])
-            print("| | ", "cooked")
-            print("| | dom:", element.dom)
-            print("| | oid:", element.oid)
+            for j in range(len(element.cells)):
+                print("| | | ", j + 1, ":", element.cells[j])
+            print("| | ", "cooked")  # Need further implementation
+            print("| | dom:", 0)
+            print("| | oid:", self.incrOid())
 
 
-class Col(Mine):
-    def __init__(self, pos=0, txt=None):
-        self.identify()
+class Col:
+    def __init__(self, oid=0, pos=0, txt=None):
+        self.oid = oid
         self.pos = pos
         self.txt = txt
 
 
-class Row(Mine):
-    def __init__(self, cells=[], cooked=[], dom=0):
-        self.identify()
+class Row:
+    def __init__(self, oid, cells=[], cooked=[], dom=0):
+        self.oid = oid
         self.cells = cells
         self.cooked = cooked
         self.dom = dom
@@ -210,7 +218,6 @@ def main():
     overcast, 81, 75, FALSE, yes
     rainy, 71, 91, TRUE, no
     """
-
 
 if __name__ == "__main__":
     main()

@@ -27,13 +27,6 @@ class Sym:
             self.mode = x
         return x
 
-    def symDec(self, x):
-        self._ent = None
-        if self.n > 0:
-            self.n -= 1
-        self.counts[x] -= 1
-        return x
-
     def symEnt(self):
         if self._ent is None:
             self._ent = 0
@@ -42,11 +35,17 @@ class Sym:
                 self._ent -= p * math.log(p, 2)
         return self._ent
 
+    def symAny(self):
+        pass
+
+    def symLike(self):
+        pass
+
 
 def main():
     testlist = ['a', 'a', 'a', 'a', 'b', 'b', 'c']
     sym = Sym(testlist)
-    print(sym.symEnt())
+    print(sym.symEnt()) # 1.3787834934861756
 
 
 if __name__ == "__main__":

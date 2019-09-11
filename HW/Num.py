@@ -55,7 +55,6 @@ def main():
             meanAddList.append(round(numAddInstance.expect(), 2)), sdAddList.append(round(numAddInstance.delta(), 2))
         index += 1
 
-
     numSubInstance = Num(test_randoms)
     meanSubList = []
     sdSubList = []

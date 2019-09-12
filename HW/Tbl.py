@@ -1,5 +1,6 @@
 import re, sys
 from Num import Num
+from Sym import Sym
 
 
 class THE:
@@ -8,6 +9,7 @@ class THE:
     less = "<"
     more = ">"
     skip = "?"
+    predict = "!"
     doomed = r'([\n\t\r ]|#.*)'
 
 
@@ -38,10 +40,35 @@ class Tbl(Mine):
 
     def read(self, file):
         for n, cell in enumerate(cells(cols(rows(string(file))))):
-            print(cell)
+            # print(cell)
             self.listOfRead.append(cell)  # store all processed output
+
+            type = None
+            goal = None
+            w = 0
+
             if n == 0:  # check init title list is empty
-                self.listOfCol = [Col(i, t) for i, t in enumerate(cell)]
+                for i, t in enumerate(cell):
+                    if (THE.less in t) or (THE.more in t) or (THE.num in t):
+                        type = "Num"
+                    else:
+                        type = "Sym"
+
+                    if THE.less in t:
+                        goal = "less"
+                    elif THE.more in t:
+                        goal = "more"
+                    elif THE.predict in t:
+                        goal = "predict"
+                    else:
+                        goal = "xs"
+
+                    if THE.less in t:
+                        w = -1
+                    else:
+                        w = 1
+
+                    self.listOfCol.append(Col(i, t, type, goal, w))
             else:
                 self.listOfRow += [Row(cell, [], 0)]  # each row is a Row object
 
@@ -90,12 +117,103 @@ class Tbl(Mine):
             print("| | dom:", element.dom)
             print("| | oid:", element.oid)
 
+    def dump2(self):
+        [print(a) for a in self.listOfRead]
+        print("")
+        [print(c) for c in self.listOfCol]
+        print("")
+        [print(r) for r in self.listOfRow]
+
+        my_goals = []
+        my_xs = []
+        my_nums = []
+        my_syms = []
+        my_w = []
+        my_xsyms = []
+
+        print("")
+        print("t.cols")
+
+        for i, element in enumerate(self.listOfCol):
+            print("| ", i + 1)
+            if element.type == "Sym":
+                print("| | add: Sym1")
+                print("| | cnt")
+
+                templist = []
+                for _, item in enumerate(self.listOfRead[1:len(self.listOfRead)]):
+                    templist.append(item[element.pos])
+
+                for x in (list(set(templist))):
+                    print("| | | ", x, ":", templist.count(x))
+
+                symInstance = Sym(templist)
+                print("| | col:", i + 1)
+                print("| | mode:", symInstance.mode)
+                print("| | most:", symInstance.most)
+                print("| | n:", symInstance.n)
+                print("| | oid:", element.oid)
+                print("| | txt:", element.txt)
+
+            elif element.type == "Num":
+                print("| | add: Num1")
+                numInstance = Num()
+                for _, item in enumerate(self.listOfRead[1:len(self.listOfRead)]):
+                    numInstance.__add__(int(item[element.pos]))
+
+                print("| | col:", i + 1)
+                print("| | hi:", numInstance.hi)
+                print("| | lo:", numInstance.lo)
+                print("| | m2:", "{:.3f}".format(numInstance.m2))
+                print("| | mu:", "{:.3f}".format(numInstance.expect()))
+                print("| | n:", len(self.listOfRead))
+                print("| | oid:", element.oid)
+                print("| | sd:", "{:.3f}".format(numInstance.delta()))
+                print("| | txt:", element.txt)
+
+            if element.goal != "xs":
+                my_goals.append(element.pos)
+            else:
+                my_xs.append(element.pos)
+
+            if element.type == "Num":
+                my_nums.append(element.pos)
+            elif element.type == "Sym":
+                my_syms.append(element.pos)
+
+            if element.w != 1:
+                my_w.append(element.pos)
+
+            if element.type == "Sym" and element.goal == "xs":
+                my_xsyms.append(element.pos)
+
+        print("t.my")
+        if element.goal == "predict":
+            print("| class:", element.pos + 1)
+
+        print("| goals")
+        [print("| | ", x + 1) for x in my_goals]
+        print("| nums")
+        [print("| | ", x + 1) for x in my_nums]
+        print("| syms")
+        [print("| | ", x + 1) for x in my_syms]
+        print("| w")
+        [print("| | ", x + 1, ":-1") for x in my_w]
+        print("| xnums")
+        print("| xs")
+        [print("| | ", x + 1) for x in my_xs]
+        print("| xsyms")
+        [print("| | ", x + 1) for x in my_xsyms]
+
 
 class Col(Mine):
-    def __init__(self, pos=0, txt=None):
+    def __init__(self, pos=0, txt=None, type=None, goal=None, w=0):
         self.identify()
         self.pos = pos
         self.txt = txt
+        self.type = type
+        self.goal = goal
+        self.w = w
 
 
 class Row(Mine):
@@ -151,7 +269,6 @@ def cells(src):
         return fs[n](cell)  # compile column 'n'
 
     for _, cells in enumerate(src):
-        # print("cells:", cells)
         yield [ready(n, cell) for n, cell in enumerate(cells)]
 
 
@@ -163,10 +280,15 @@ def prep(x):
         i = int(f)
         return i if i == f else f
 
+    def string(z):
+        return z
+
     # --------------------------------------------------------
     for c in [THE.num, THE.less, THE.more]:
         if c in x:
             return num
+        else:
+            return string
 
 
 def main():
@@ -189,9 +311,9 @@ def main():
     100,        71,    91,    15,   0
     """
 
-    tbl = Tbl()
-    tbl.read(file)
-    tbl.dump()
+    # tbl = Tbl()
+    # tbl.read(file)
+    # tbl.dump()
 
     file2 = """
     outlook, ?$temp,  <humid, wind, !play
@@ -210,6 +332,10 @@ def main():
     overcast, 81, 75, FALSE, yes
     rainy, 71, 91, TRUE, no
     """
+
+    tbl2 = Tbl()
+    tbl2.read(file2)
+    tbl2.dump2()
 
 
 if __name__ == "__main__":

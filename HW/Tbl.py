@@ -40,12 +40,7 @@ class Tbl(Mine):
 
     def read(self, file):
         for n, cell in enumerate(cells(cols(rows(string(file))))):
-            # print(cell)
             self.listOfRead.append(cell)  # store all processed output
-
-            type = None
-            goal = None
-            w = 0
 
             if n == 0:  # check init title list is empty
                 for i, t in enumerate(cell):
